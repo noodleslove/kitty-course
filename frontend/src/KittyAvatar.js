@@ -96,17 +96,17 @@ const dnaToAttributes = dna => {
 };
 
 const KittyAvatar = props => {
-  const outerStyle = { height: '150px', position: 'relative', width: '50%' };
-  const innerStyle = { height: '150px', position: 'absolute', top: '0%', left: '50%' };
+  const outerStyle = { height: '160px', position: 'relative', width: '50%' };
+  const innerStyle = { height: '150px', position: 'absolute', top: '3%', left: '50%' };
 
   const cat = dnaToAttributes(props.dna);
-  return <div><div style={outerStyle}>
+  return <div style={outerStyle}>
     <img alt='body' src={cat.body} style={innerStyle} />
     <img alt='fur' src={cat.fur} style={innerStyle} />
     <img alt='mouth' src={cat.mouth} style={innerStyle} />
     <img alt='eyes' src={cat.eyes} style={innerStyle} />
     <img alt='accessory' src={cat.accessory} style={innerStyle} />
-  </div></div>;
+  </div>;
 };
 
 export default KittyAvatar;
