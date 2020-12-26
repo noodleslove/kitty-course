@@ -3,16 +3,17 @@
 use codec::{Encode, Decode};
 use frame_support::{
 	decl_module, decl_storage, decl_error, decl_event, ensure, StorageValue, StorageMap, Parameter,
+	debug,
 	traits::{Randomness, Currency, ExistenceRequirement},
 };
 use sp_io::hashing::blake2_128;
 use frame_system::{self as system, ensure_signed};
-use sp_runtime::{DispatchError,  traits::{AtLeast32Bit, Member, Bounded,}};
+use sp_runtime::{DispatchError, RuntimeDebug, traits::{AtLeast32Bit, Member, Bounded,}};
 use crate::link::{LinkedList, LinkedItem};
 
 mod link;
 
-#[derive(Encode, Decode)]
+#[derive(Encode, Decode, RuntimeDebug, Clone, PartialEq)]
 pub struct Kitty(pub [u8; 16]);
 
 pub trait Trait: frame_system::Trait {
@@ -30,16 +31,21 @@ decl_storage! {
 	trait Store for Module<T: Trait> as Kitties {
 		/// Stores all the kitties, key is the kitty id / index
 		pub Kitties get(fn kitties): map hasher(blake2_128_concat) T::KittyIndex => Option<Kitty>;
+
 		/// Stores the total number of kitties. i.e. the next kitty index
 		pub KittiesCount get(fn kitties_count): T::KittyIndex;
 
 		/// Store owned kitties in a linked list.
-		pub OwnedKitties get(fn owned_kitties): map hasher(blake2_128_concat) (T::AccountId, Option<T::KittyIndex>) => Option<KittyLinkedItem<T>>;
+		pub OwnedKitties get(fn owned_kitties): map hasher(blake2_128_concat)
+			(T::AccountId, Option<T::KittyIndex>) => Option<KittyLinkedItem<T>>;
+
 		/// Store owner of each kitity.
-		pub KittyOwners get(fn kitty_owner): map hasher(blake2_128_concat) T::KittyIndex => Option<T::AccountId>;
+		pub KittyOwners get(fn kitty_owner): map hasher(blake2_128_concat) T::KittyIndex =>
+			Option<T::AccountId>;
 
 		/// Get kitty price. None means not for sale.
-		pub KittyPrices get(fn kitty_price): map hasher(blake2_128_concat) T::KittyIndex => Option<BalanceOf<T>>;
+		pub KittyPrices get(fn kitty_price): map hasher(blake2_128_concat) T::KittyIndex =>
+			Option<BalanceOf<T>>;
 	}
 }
 
@@ -179,9 +185,8 @@ impl<T: Trait> Module<T> {
 
 	fn insert_kitty(owner: &T::AccountId, kitty_id: T::KittyIndex, kitty: Kitty) {
 		// Create and store kitty
-		Kitties::<T>::insert(kitty_id, kitty);
+		Kitties::<T>::insert(kitty_id, kitty.clone());
 		KittiesCount::<T>::put(kitty_id + 1.into());
-
 		Self::insert_owned_kitty(owner, kitty_id);
 	}
 
