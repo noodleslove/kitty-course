@@ -1,4 +1,12 @@
-# Substrate Front End Template
+# Substrate Kitty Course Front-end
+
+![kitties-screenshot01](docs/kitties-screenshot01.png)
+
+This front-end is based on Substrate Front End Template and a kitty section is specially built to demonstrate using Polkadot-JS api to connect and interact with a Substrate node.
+
+A video demonstration of the front-end can be [seen here](https://www.awesomescreenshot.com/video/2196893?key=7749c0f9101a5791240bda8a391a1ce9).
+
+## Substrate Front End Template
 
 This template allows you to create a front-end application that connects to a
 [Substrate](https://github.com/paritytech/substrate) node back-end with minimal

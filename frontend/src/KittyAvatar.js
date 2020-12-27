@@ -98,8 +98,11 @@ const dnaToAttributes = dna => {
 const KittyAvatar = props => {
   const outerStyle = { height: '160px', position: 'relative', width: '50%' };
   const innerStyle = { height: '150px', position: 'absolute', top: '3%', left: '50%' };
+  const { dna } = props;
 
-  const cat = dnaToAttributes(props.dna);
+  if (!dna) return null;
+
+  const cat = dnaToAttributes(dna);
   return <div style={outerStyle}>
     <img alt='body' src={cat.body} style={innerStyle} />
     <img alt='fur' src={cat.fur} style={innerStyle} />

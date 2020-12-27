@@ -114,7 +114,10 @@ decl_module! {
 		pub fn transfer(origin, to: T::AccountId, kitty_id: T::KittyIndex) {
 			let sender = ensure_signed(origin)?;
 
-			ensure!(<OwnedKitties<T>>::contains_key((&sender, Some(kitty_id))), Error::<T>::RequireOwner);
+			// jc-note: This line failed, so I am checking `kitty_owner`,
+			//   ref: https://github.com/SubstrateCourse/kitties-course/issues/3
+			// ensure!(<OwnedKitties<T>>::contains_key((&sender, Some(kitty_id))), Error::<T>::RequireOwner);
+			ensure!(Self::kitty_owner(kitty_id) == Some(sender.clone()), "Kitty is not owned by sender.");
 
 			Self::do_transfer(&sender, &to, kitty_id);
 
@@ -124,7 +127,7 @@ decl_module! {
 		/// Set a price for a kitty for sale
 		/// None to delist the kitty
 		#[weight = 0]
-        pub fn ask(origin, kitty_id: T::KittyIndex, new_price: Option<BalanceOf<T>>) {
+		pub fn ask(origin, kitty_id: T::KittyIndex, new_price: Option<BalanceOf<T>>) {
 			let sender = ensure_signed(origin)?;
 
 			ensure!(<OwnedKitties<T>>::contains_key((&sender, Some(kitty_id))), Error::<T>::RequireOwner);
@@ -251,8 +254,8 @@ mod tests {
 		pub const AvailableBlockRatio: Perbill = Perbill::from_percent(75);
 	}
 	impl system::Trait for Test {
-        type Origin = Origin;
-        type BaseCallFilter = ();
+		type Origin = Origin;
+		type BaseCallFilter = ();
 		type Call = ();
 		type Index = u64;
 		type BlockNumber = u64;
@@ -271,17 +274,17 @@ mod tests {
 		type MaximumBlockLength = MaximumBlockLength;
 		type AvailableBlockRatio = AvailableBlockRatio;
 		type Version = ();
-        type SystemWeightInfo = ();
-        type PalletInfo = PalletInfo;
+		type SystemWeightInfo = ();
+		type PalletInfo = PalletInfo;
 		type AccountData = ();
 		type OnNewAccount = ();
 		type OnKilledAccount = ();
-    }
+		}
 
 	impl Trait for Test {
-        type Event = ();
-        type Currency: Balances;
-        type Randomness: Randomness<H256>;
+		type Event = ();
+		type Currency: Balances;
+		type Randomness: Randomness<H256>;
 		type KittyIndex = u32;
 	}
 	type OwnedKittiesTest = OwnedKitties<Test>;

@@ -8,12 +8,13 @@ import KittyCards from './KittyCards';
 
 export default function Kitties (props) {
   const { api, keyring } = useSubstrate();
-  // const accounts = keyring.getPairs();
   const { accountPair } = props;
 
   const [kittyCnt, setKittyCnt] = useState(0);
+  const [kittyDNAs, setKittyDNAs] = useState([]);
+  const [kittyOwners, setKittyOwners] = useState([]);
+  const [kittyPrices, setKittyPrices] = useState([]);
   const [kitties, setKitties] = useState([]);
-  // The transaction submission status
   const [status, setStatus] = useState('');
 
   const fetchKittyCnt = () => {
@@ -24,38 +25,57 @@ export default function Kitties (props) {
   };
 
   const fetchKitties = () => {
+    let unsubDnas = null;
+    let unsubOwners = null;
+    let unsubPrices = null;
+
     const asyncFetch = async () => {
       const kittyIndices = [...Array(kittyCnt).keys()];
 
-      const results = await Promise.all([
-        api.query.kittiesModule.kitties.multi(kittyIndices),
-        api.query.kittiesModule.kittyOwners.multi(kittyIndices),
-        api.query.kittiesModule.kittyPrices.multi(kittyIndices)
-      ]);
+      unsubDnas = await api.query.kittiesModule.kitties.multi(
+        kittyIndices,
+        dnas => setKittyDNAs(dnas.map(dna => dna.value.toU8a()))
+      );
 
-      const [kittyDnas, kittyOwners, kittyPrices] = results;
+      unsubOwners = await api.query.kittiesModule.kittyOwners.multi(
+        kittyIndices,
+        owners => setKittyOwners(owners.map(owner => owner.toHuman()))
+      );
 
-      setKitties(kittyDnas.map((dna, ind) => ({
-        id: kittyIndices[ind],
-        dna: dna.value.toU8a(),
-        owner: kittyOwners[ind].toHuman(),
-        price: kittyPrices[ind].isSome && kittyPrices[ind].toHuman()
-      })));
+      unsubPrices = await api.query.kittiesModule.kittyPrices.multi(
+        kittyIndices,
+        prices => setKittyPrices(prices.map(price => price.isSome && price.toHuman()))
+      );
     };
 
     asyncFetch();
+
+    // return the unsubscription cleanup function
+    return () => {
+      unsubDnas && unsubDnas();
+      unsubOwners && unsubOwners();
+      unsubPrices && unsubPrices();
+    };
+  };
+
+  const populateKitties = () => {
+    const kittyIndices = [...Array(kittyCnt).keys()];
+    const kitties = kittyIndices.map(ind => ({
+      id: ind,
+      dna: kittyDNAs[ind],
+      owner: kittyOwners[ind],
+      price: kittyPrices[ind]
+    }));
+    setKitties(kitties);
   };
 
   useEffect(fetchKittyCnt, [api, keyring]);
   useEffect(fetchKitties, [api, kittyCnt]);
-
-  useEffect(() => {
-    console.log('kitties updated', kitties);
-  }, [api, kitties]);
+  useEffect(populateKitties, [kittyDNAs, kittyOwners]);
 
   return <Grid.Column width={16}>
     <h1>小毛孩</h1>
-    <KittyCards kitties={kitties} />
+    <KittyCards kitties={kitties} accountPair={accountPair} setStatus={setStatus}/>
     <Form style={{ margin: '1em 0' }}>
       <Form.Field style={{ textAlign: 'center' }}>
         <TxButton
